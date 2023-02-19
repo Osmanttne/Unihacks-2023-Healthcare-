@@ -10,71 +10,111 @@ icon-active: <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" view
 
 <div id="mailbox">
     <div id="messages">
-
+        <a href="#" id="new-message-button" class="button-outlined">
+            <i class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256"><path fill="currentColor" d="M223.7 32.3a15.9 15.9 0 0 0-15.6-4.1L21.8 80.7a16.1 16.1 0 0 0-2.6 29.9l85.7 40.5l40.5 85.7a16 16 0 0 0 14.4 9.1h1.4a15.9 15.9 0 0 0 14.1-11.6l52.5-186.4a15.9 15.9 0 0 0-4.1-15.6Zm-63.8 197.6l-39.4-83.1l41.3-41.3a8 8 0 1 0-11.3-11.3l-41.3 41.3l-83.1-39.4l186.3-52.5Z"/></svg></i>
+            New Message
+        </a>
     </div>
     <div id="message-content" class="card-outlined">
         <h1 id="message-content-title"></h1>
         <p id="message-content-text"></p>
     </div>
+    <div id="new-message-form" class="card-elevated" style="display: none;">
+        <h1>New Message</h1>
+        <form action="http://{{ site.api_url }}/messages/send" method="post">
+            <label for="message-sender">Send from:</label>
+            <input type="email" id="message-sender" name="from" value="wattsuser@patients.wattshospital.com" readonly required>
+            <br>
+            <label for="message-recipient">Send to:</label>
+            <input type="email" id="message-recipient" name="to" class="input-filled" required>
+            <br>
+            <label for="message-title">Message title: </label>
+            <input type="text" id="message-title" name="title" required>
+            <br>
+            <textarea name="text" id="message-text" required></textarea>
+            <br>
+            <div id="button-box">
+                <input type="submit" id="send-message-button" value="Send Message">
+                <button id="close-new-message-form">Cancel</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
-    const user = "44ab0679-a28e-4a5d-aa7b-7d1607147db0";
-    const req = new Request("http://{{ site.api_url }}/messages/get/" + user);
-    fetch(req)
+    fetch(new Request("http://{{ site.api_url }}/uuid/from_email/wattsuser@patients.wattshospital.com"))
         .then((response) => {
             return response.json();
         })
-        .then((response) => {
-            for (let message of response) {
-                let msg = document.createElement("a");
-                msg.onclick = function () {
-                    document.getElementById("message-content-title").innerHTML = message["title"];
-                    document.getElementById("message-content-text").innerHTML = message["text"];
+        .then((user_id) => {
+            const get_messages_req = new Request("http://{{ site.api_url }}/messages/get/" + user_id);
 
-                    let read = fetch(new Request("http://{{ site.api_url }}/messages/read/" + user + "/" + message["id"]));
-                    msg.setAttribute("disabled", true);
-                }
-                msg.href = "#";
-                msg.classList.add("card-filled");
-                if (message["read"] === true) {
-                    msg.setAttribute("disabled", true);
-                } else {
-                    console.log(message);
-                    console.log(message["read"]);
-                }
-                msg.style.height = "110px";
-
-                let user_profile = document.createElement("div");
-                user_profile.classList.add("user-profile");
-
-                let doctor = fetch(new Request("http://{{ site.api_url }}/doctor/from_email/" + message["sender"]))
+            function update_messages() {
+                fetch(get_messages_req)
                     .then((response) => {
                         return response.json();
                     })
-                    .then((doctor) => {
-                        let pfp = document.createElement("img");
-                        pfp.src = "/assets/doctors/" + doctor["photo"];
-                        user_profile.appendChild(pfp);
+                    .then((response) => {
+                        for (let message of response) {
+                            let msg = document.createElement("a");
+                            msg.onclick = function () {
+                                document.getElementById("message-content-title").innerHTML = message["title"];
+                                document.getElementById("message-content-text").innerHTML = message["text"];
 
-                        let sender_title_box = document.createElement("div");
+                                let read = fetch(new Request("http://{{ site.api_url }}/messages/read/" + user_id + "/" + message["id"]));
+                                msg.setAttribute("disabled", true);
+                            }
+                            msg.href = "#";
+                            msg.classList.add("card-filled");
+                            if (message["read"] === true) {
+                                msg.setAttribute("disabled", true);
+                            }
+                            msg.style.height = "110px";
 
-                        let sender = document.createElement("h1");
-                        sender.innerHTML = "Dr." + doctor["name"];
-                        sender.classList.add("mailbox-message-author");
-                        sender_title_box.appendChild(sender);
+                            let user_profile = document.createElement("div");
+                            user_profile.classList.add("user-profile");
 
-                        let title = document.createElement("h1");
-                        title.innerHTML = message["title"];
-                        title.classList.add("mailbox-message-title");
-                        sender_title_box.appendChild(title);
+                            let doctor = fetch(new Request("http://{{ site.api_url }}/doctor/" + message["from"]))
+                                .then((response) => {
+                                    return response.json();
+                                })
+                                .then((doctor) => {
+                                    let pfp = document.createElement("img");
+                                    pfp.src = "/assets/doctors/" + doctor["photo"];
+                                    user_profile.appendChild(pfp);
 
-                        user_profile.appendChild(sender_title_box);
-                        msg.appendChild(user_profile);
+                                    let sender_title_box = document.createElement("div");
 
-                        let messages = document.getElementById("messages");
-                        messages.appendChild(msg);
-                    });
+                                    let sender = document.createElement("h1");
+                                    sender.innerHTML = "Dr." + doctor["name"];
+                                    sender.classList.add("mailbox-message-author");
+                                    sender_title_box.appendChild(sender);
+
+                                    let title = document.createElement("h1");
+                                    title.innerHTML = message["title"];
+                                    title.classList.add("mailbox-message-title");
+                                    sender_title_box.appendChild(title);
+
+                                    user_profile.appendChild(sender_title_box);
+                                    msg.appendChild(user_profile);
+
+                                    let messages = document.getElementById("messages");
+                                    messages.appendChild(msg);
+                                });
+                        }
+                    }
+                );
+            }
+            update_messages();
+            
+            let newMsgButton = document.getElementById("new-message-button");
+            let newMsgForm = document.getElementById("new-message-form");
+            let closeMsgForm = document.getElementById("close-new-message-form");
+            newMsgButton.onclick = function() {
+                newMsgForm.style.display = "block";
+            }
+            closeMsgForm.onclick = function() {
+                newMsgForm.style.display = "none";
             }
         });
 </script>

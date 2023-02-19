@@ -5,9 +5,10 @@ mod db;
 use std::sync::Mutex;
 
 use db::*;
-use rocket::serde::json::Json;
+use rocket::{form::{Form, Strict}, serde::json::Json};
+use serde::{Serialize, Deserialize};
+use strum::IntoEnumIterator;
 use uuid::Uuid;
-use time::{Time, Date, Duration};
 
 lazy_static::lazy_static!(
     static ref DATABASE: Mutex<Database> = Mutex::from(db::load());
@@ -20,28 +21,121 @@ fn index() -> &'static str {
 
 #[get("/messages/get/<user_id>")]
 fn get_messages(user_id: Uuid) -> Result<Json<Vec<db::Message>>, ()> {
-    if let Some(user) = DATABASE.lock().unwrap()
-        .users
+    let mail: Vec<Message> = DATABASE.lock().unwrap()
+        .mail
         .iter()
-        .find(|test_user| test_user.id == user_id)
+        .filter(|test_msg| test_msg.to == user_id)
+        .map(Message::clone)
+        .collect();
+    if !mail.is_empty()
     {
-        Ok(Json(user.messages.clone()))
+        Ok(Json(mail))
     } else {
         Err(())
     }
 }
 #[get("/messages/read/<user_id>/<message_id>")]
-fn read_message(user_id: Uuid, message_id: Uuid) {
-    if let Some(user) = DATABASE.lock().unwrap().users.iter_mut().find(|test_user| test_user.id == user_id) {
-        if let Some(msg) = user.messages.iter_mut().find(|test_msg| test_msg.id == message_id) {
-            msg.read = true;
+fn read_message(user_id: Uuid, message_id: Uuid) -> Result<(), ()> {
+    if let Some(message) = DATABASE.lock().unwrap().mail.iter_mut().find(|test_msg| test_msg.to == user_id && test_msg.id == message_id) {
+        message.read = true;
+        return Ok(());
+    }
+    Err(())
+}
+
+#[derive(FromForm)]
+struct MessageForm {
+    pub title: String,
+    pub text: String,
+    pub to: String,
+    pub from: String,
+}
+#[derive(Serialize, Deserialize)]
+enum MessageFormError {
+    To,
+    From
+}
+impl TryFrom<MessageForm> for Message {
+    type Error = MessageFormError;
+    fn try_from(msg: MessageForm) -> Result<Self, Self::Error> {
+        let db = DATABASE.lock().unwrap();
+        match db.uuid_from_email(&msg.to) {
+            Some(to) => match db.uuid_from_email(&msg.from) {
+                Some(from) => Ok(Self {
+                    title: msg.title,
+                    text: msg.text,
+                    to,
+                    from,
+                    read: false,
+                    id: Uuid::new_v4()
+                }),
+                None => Err(MessageFormError::From)
+            },
+            None => Err(MessageFormError::To)
         }
     }
 }
 
-#[get("/doctor/from_email/<email>")]
-fn get_doctor_from_email(email: String) -> Result<Json<Doctor>, ()> {
-    if let Some(doctor) = DATABASE.lock().unwrap().doctors.iter().find(|test_doctor| test_doctor.email == email)
+#[post("/messages/send", data = "<message>")]
+fn send_message(message: Form<Strict<MessageForm>>) -> Result<(), Json<MessageFormError>> {
+    let msg: Message = message.into_inner().into_inner().try_into()?;
+    let mut db = DATABASE.lock().unwrap();
+    
+    println!(
+        "{} sent an email to {} with the title `{}` and contents `{}`",
+        db.email_from_uuid(msg.from).unwrap(),
+        db.email_from_uuid(msg.to).unwrap(),
+        msg.title,
+        msg.text
+    );
+    db.mail.push(msg);
+    Ok(())
+}
+
+#[get("/uuid/from_email/<email>")]
+fn get_uuid_from_email(email: String) -> Option<Json<Uuid>> {
+    DATABASE.lock().unwrap().uuid_from_email(&email).map(Json)
+}
+
+#[get("/patient/<patient_id>/doctors")]
+fn get_patient_care_team(patient_id: Uuid) -> Json<Vec<Doctor>> {
+    let db = DATABASE.lock().unwrap();
+    Json(db.doctors.clone().into_iter().filter(|doctor| doctor.patient_ids.iter().any(|id| *id == patient_id)).collect())
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct AppointmentTime {
+    year: i32,
+    month: time::Month,
+    day: u8,
+    hour: u8,
+    minute: u8,
+    id: Uuid,
+    doctor: Uuid
+}
+
+#[get("/patient/<patient_id>/appointments")]
+fn get_patient_appointments(patient_id: Uuid) -> Json<Vec<AppointmentTime>> {
+    Json(
+        DATABASE.lock().unwrap().appointments.clone()
+            .into_iter()
+            .filter(|aptmnt| aptmnt.patient.is_some() && aptmnt.patient.unwrap() == patient_id)
+            .map(|aptmnt| AppointmentTime {
+                year: aptmnt.date.year(),
+                month: aptmnt.date.month(),
+                day: aptmnt.date.day(),
+                hour: aptmnt.start.hour(),
+                minute: aptmnt.start.minute(),
+                id: aptmnt.id,
+                doctor: aptmnt.doctor
+            })
+            .collect()
+    )
+}
+
+#[get("/doctor/<doctor_id>")]
+fn get_doctor_from_id(doctor_id: Uuid) -> Result<Json<Doctor>, ()> {
+    if let Some(doctor) = DATABASE.lock().unwrap().doctors.iter().find(|test_doctor| test_doctor.id == doctor_id)
     {
         Ok(Json(doctor.clone()))
     } else {
@@ -49,80 +143,80 @@ fn get_doctor_from_email(email: String) -> Result<Json<Doctor>, ()> {
     }
 }
 
-#[cfg(debug_assertions)]
-fn reset_db() {
-    let mut db = db::Database::default();
-
-    // Add the doctors
-    db.doctors
-        .push(Doctor::new("Carpenter", "", Department::Cardiology));
-    db.doctors
-        .push(Doctor::new("Taka", "", Department::Cardiology));
-    db.doctors.push(Doctor::new("Roberts", "", Department::Ent));
-    db.doctors.push(Doctor::new("Veratti", "", Department::Ent));
-    db.doctors
-        .push(Doctor::new("Benzema", "", Department::Surgery));
-    db.doctors
-        .push(Doctor::new("Rashford", "", Department::Surgery));
-    db.doctors
-        .push(Doctor::new("Taylor", "", Department::Neurology));
-    db.doctors
-        .push(Doctor::new("Leao", "", Department::Neurology));
-    db.doctors
-        .push(Doctor::new("Alfred", "", Department::Nutrition));
-    db.doctors
-        .push(Doctor::new("Larry", "", Department::Orthopedics));
-    db.doctors
-        .push(Doctor::new("Lorenzo", "", Department::Orthopedics));
-    db.doctors
-        .push(Doctor::new("Gerard", "", Department::Orthopedics));
-    db.doctors
-        .push(Doctor::new("Green", "", Department::Oncology));
-    db.doctors
-        .push(Doctor::new("Wilson", "", Department::Oncology));
-    db.doctors
-        .push(Doctor::new("Hill", "", Department::Reproductive));
-    db.doctors
-        .push(Doctor::new("Stefany", "", Department::Reproductive));
-
-    // Make a filler user
-    let mut user = db::User::default();
-    println!("Generating user with ID: {}", user.id);
-    user.messages.push(db::Message::new(
-        "Post Surgery Check In",
-        "It has been exactly 2 weeks after your surgery, I wanted to check in to ask if you had any severe changes in blood presure.",
-        "carpenter@wattshospital.com",
-    ));
-    user.messages.push(db::Message::new(
-        "Dietary Check Up",
-        "I would like to invite you for a check-up to see the changes in your body due to the diet we have prepared. Will you be available to stop by the hospital any time soon?",
-        "alfred@wattshospital.com",
-    ));
-    user.messages.push(db::Message::new(
-        "Checking in for medication effects",
-        "I wanted to check in to see if your nose is still runny. If the allergy pills did not stop it we might need to consider antibiotics.",
-        "roberts@wattshospital.com",
-    ));
-    user.messages.push(db::Message::new(
-        "Good News After Value Comparison",
-        "I have gone through your reports from last year and compared them with the information on your final check-up. We have a noticeable improvment in Forgetfulness, I believe decreasing the factors of stress to a minimum had a great impact.",
-        "taylor@wattshospital.com",
-    ));
-    user.appointments.push(Appointment {
-        date: Date::from_calendar_date(2023, time::Month::February, 19).unwrap(),
-        start: Time::from_hms(12, 30, 0).unwrap(),
-        length: Duration::hours(1),
-        patient: user.id,
-        doctor: String::from("Taka")
-    });
-
-    db.users.push(user);
-    db::save(db);
+#[get("/doctor/<doctor_id>/appointments")]
+fn get_doctor_appointments(doctor_id: Uuid) -> Json<Vec<AppointmentTime>> {
+    Json(
+        DATABASE.lock().unwrap().appointments.clone()
+            .into_iter()
+            .filter(|aptmnt| aptmnt.doctor == doctor_id && aptmnt.patient.is_none())
+            .map(|aptmnt| AppointmentTime {
+                year: aptmnt.date.year(),
+                month: aptmnt.date.month(),
+                day: aptmnt.date.day(),
+                hour: aptmnt.start.hour(),
+                minute: aptmnt.start.minute(),
+                id: aptmnt.id,
+                doctor: aptmnt.doctor
+            })
+            .collect()
+    )
 }
+
+#[get("/doctors/all")]
+fn get_all_doctors() -> Json<Vec<Doctor>> {
+    Json(DATABASE.lock().unwrap().doctors.clone())
+}
+
+#[get("/doctors/<department>")]
+fn get_doctors_in_department(department: Option<Department>) -> Json<Vec<Doctor>> {
+    println!("{department:?}");
+    if let Some(department) = department {
+        Json(DATABASE.lock().unwrap().doctors.clone().into_iter().filter(|doctor| doctor.department == department).collect())
+    } else {
+        Json(DATABASE.lock().unwrap().doctors.clone())
+    }
+}
+
+#[get("/departments")]
+fn get_departments() -> Json<Vec<(String, Department)>> {
+    Json(Department::iter().map(|dep| (Department::get_name(&dep), dep)).collect())
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, FromForm)]
+struct ReservedAppointment {
+    pub id: Uuid,
+    pub patient: Uuid
+}
+
+#[post("/appointments/reserve", format = "json", data = "<reservation>")]
+fn reserve_appointment(reservation: Json<ReservedAppointment>) -> Result<(), ()> {
+    if let Some(appointment) = DATABASE.lock().unwrap().appointments.iter_mut().find(|apmnt| apmnt.id == reservation.id) {
+        appointment.patient = Some(reservation.patient);
+        return Ok(());
+    }
+    Err(())
+}
+
+#[cfg(debug_assertions)]
+mod setup_db;
 
 #[launch]
 fn rocket() -> _ {
     #[cfg(debug_assertions)]
-    reset_db();
-    rocket::build().mount("/", routes![index, get_messages, get_doctor_from_email, read_message])
+    setup_db::setup();
+    rocket::build().mount("/", routes![
+        index,
+        get_messages,
+        get_doctor_from_id,
+        read_message,
+        send_message,
+        get_uuid_from_email,
+        get_doctor_appointments,
+        get_all_doctors,
+        get_doctors_in_department,
+        get_departments,
+        reserve_appointment,
+        get_patient_care_team,
+        get_patient_appointments
+    ])
 }

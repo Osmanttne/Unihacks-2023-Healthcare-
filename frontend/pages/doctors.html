@@ -1,0 +1,56 @@
+---
+title: Doctors
+permalink: /doctors
+layout: default
+---
+
+<div class="gallery-flex" id="doctor-list">
+
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const department = params.get("department");
+    const req = new Request("http://{{ site.api_url }}/doctors/" + department);
+    const doctors_list = document.getElementById("doctor-list");
+
+    fetch(req).then((response) => {
+        return response.json();
+    }).then((doctors) => {
+        for (doctor of doctors) {
+            let doctor_card = document.createElement("div");
+            let doctor_image = document.createElement("img");
+            let doctor_text_section = document.createElement("div");
+            let doctor_name = document.createElement("h1");
+            let doctor_description = document.createElement("p");
+            let doctor_card_actions = document.createElement("div");
+            let doctor_appointment_action = document.createElement("a");
+
+            doctor_appointment_action.classList.add("button-outlined");
+            doctor_appointment_action.innerHTML = "Schedule Appointment";
+            doctor_appointment_action.href = "/doctors/meet?doctor=" + doctor["id"];
+
+            doctor_card_actions.classList.add("actions");
+
+            doctor_description.innerHTML = doctor["bio"];
+
+            doctor_name.innerHTML = "Dr. " + doctor["name"];
+
+            doctor_text_section.classList.add("content-horizontal");
+
+            doctor_image.classList.add("banner-side");
+            doctor_image.src = "/assets/doctors/" + doctor["photo"];
+
+            doctor_card.classList.add("card-elevated");
+            doctor_card.style.setProperty("--direction", "row");
+
+            doctor_card_actions.appendChild(doctor_appointment_action);
+            doctor_text_section.appendChild(doctor_name);
+            doctor_text_section.appendChild(doctor_description);
+            doctor_text_section.appendChild(doctor_card_actions);
+            doctor_card.appendChild(doctor_image);
+            doctor_card.appendChild(doctor_text_section);
+            doctors_list.appendChild(doctor_card);
+        }
+    })
+</script>

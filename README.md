@@ -9,17 +9,17 @@ Website for hospital functionality for Unihacks 2023 Hackathon
     - [x] Material3 theme (Yoinked from BrightShard's website)
 - [ ] Email
     - [x] Store emails in database
-    - [ ] Send emails to doctors/Reply to emails from doctors
+    - [x] Send emails to doctors/Reply to emails from doctors
     - [x] Receive emails from doctors
         - [x] Mark as read after viewing
     - [ ] Improve email UI
 - [ ] Schedule
     - [x] Store time/date in database
-    - [ ] View upcoming checkups
-    - [ ] Schedule future appointments
+    - [x] View upcoming checkups
+    - [x] Schedule future appointments
     - [ ] Change appointment times?
-- [ ] Care Team/Staff Info
-    - [ ] Bio for doctors
+- [x] Care Team/Staff Info
+    - [x] Bio for doctors
     - [x] Pictures for doctors
 - [ ] Users
     - [x] Store users in database

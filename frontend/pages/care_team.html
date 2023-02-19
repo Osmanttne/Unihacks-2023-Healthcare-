@@ -1,0 +1,42 @@
+---
+layout: default
+permalink: /care-team
+title: Your Personal Care Team
+---
+
+<div class="gallery-flex" id="team-list">
+
+</div>
+
+<script>
+    const patient_id_req = new Request("http://{{ site.api_url }}/uuid/from_email/wattsuser@patients.wattshospital.com");
+    const gallery = document.getElementById("team-list");
+
+    fetch(patient_id_req).then((response) => {return response.json()}).then((patient_id) => {
+        const req = new Request("http://{{ site.api_url }}/patient/" + patient_id + "/doctors");
+        fetch(req).then((response) => {return response.json()}).then((doctors) => {
+            for (doctor of doctors) {
+                let card = document.createElement("div");
+                let photo = document.createElement("img");
+                let name = document.createElement("h1");
+                let department = document.createElement("p");
+                let description = document.createElement("p");
+
+                name.innerHTML = "Dr. " + doctor["name"];
+                department.innerHTML = doctor["department"];
+                description.innerHTML = doctor["bio"];
+                photo.src = "/assets/doctors/" + doctor["photo"];
+                photo.classList.add("banner");
+                photo.style.maxHeight = "500px";
+
+                card.classList.add("card-outlined");    
+
+                card.appendChild(photo);
+                card.appendChild(name);
+                card.appendChild(department);
+                card.appendChild(description);
+                gallery.appendChild(card);
+            }
+        });
+    });
+</script>
