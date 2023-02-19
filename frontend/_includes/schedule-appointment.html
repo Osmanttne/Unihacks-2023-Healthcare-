@@ -1,0 +1,16 @@
+<div class="gallery-flex">
+    {% assign doctors = site.doctors | where: "department", include.department %}
+    {% for doctor in doctors %}
+        <div class="card-elevated" style="--direction: row;">
+            <img src="/assets/doctors/{{ doctor.name | slugify }}.jpg" class="banner-side">
+            <div class="content-horizontal">
+                <h1>Dr. {{ doctor.name }}</h1>
+                <p>{{ doctor.description }}</p>
+
+                <div class="actions" style="justify-self: last baseline;">
+                    <a href="" class="button-outlined">Schedule Appointment</a>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>

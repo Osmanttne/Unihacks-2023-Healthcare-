@@ -1,0 +1,15 @@
+<!-- Syntax highlighting in code blocks -->
+<link href="/assets/pygments.css" rel="stylesheet">
+<!-- Website default styling -->
+<link href="/assets/default.css" rel="stylesheet">
+
+<!-- Viewport meta -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Watts Hospital Dashboard</title>
+
+{% if page.image %}
+    {% capture header_image %}https://brightshard.dev/{{ page.image }}{% endcapture %}
+    <meta name="twitter:image" content="{{ header_image }}" />
+    <meta property="og:image" content="{{ header_image }}" />
+{% endif %}

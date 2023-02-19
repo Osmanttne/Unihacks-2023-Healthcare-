@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% include head.html title="Projects" %}
+        <link href="/assets/post.css" rel="stylesheet">
+    </head>
+    <body>
+        <div id="navigation">
+            {% include navigation.html %}
+        </div>
+
+        <div id="titlebar">
+            {% include titlebar.html title="Projects" %}
+        </div>
+        
+        <div id="content">
+            <h1 id="post-title">{{ page.title }}</h1>
+
+            <div id="toc-wrapper" class="card-elevated">
+                <h1>About this project...</h1>
+                {% include toc.html html=content id='toc' %}
+                <div class="actions">
+                    <a {% include github.html repo=page.github %} class="button-text">View on GitHub</a>
+                    <a class="button-outlined" href="/projects">All Projects</a>
+                </div>
+            </div>
+
+            <div id="blog-content">
+                {{ content }}
+            </div>
+
+            <a class="fab" href="#titlebar">
+                <i class="icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M4.08 11.92L12 4l7.92 7.92l-1.42 1.41l-5.5-5.5V22h-2V7.83l-5.5 5.5l-1.42-1.41M12 4h10V2H2v2h10Z"/></svg>
+                </i>
+            </a>
+        </div>
+    </body>
+</html>

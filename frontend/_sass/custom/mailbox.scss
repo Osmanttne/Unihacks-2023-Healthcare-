@@ -1,0 +1,30 @@
+@use "material/theme" as *;
+
+#mailbox {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    gap: var(--margin);
+}
+#messages {
+    width: 35%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+#message-content {
+    width: 65%;
+    height: 100%;
+    position: sticky;
+}
+
+.mailbox-message-author {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.mailbox-message-title {
+    font-size: $title-large;
+    margin: 0px;
+}

@@ -1,0 +1,51 @@
+<div class="navigation">
+{% assign navbarpages = site.pages | where: "navbar", "enabled" | sort: "order" %}
+{% for navbarpage in navbarpages %}
+
+    {% assign icon = navbarpage.icon %}
+    {% assign id = "" %}
+    {% assign subpages = site.pages | where: "parent", navbarpage.name | sort: "order" %}
+
+    {% if page.name == navbarpage.name %}
+        {% assign icon = navbarpage.icon-active %}
+        {% assign id = "active-page" %}
+    {% elsif page.parent == navbarpage.name %}
+        {% assign icon = navbarpage.icon-active %}
+        {% assign id = "active-page" %}
+    {% endif %}
+
+    <a id="{{ id }}" href="{{ navbarpage.url }}">
+        <i class="icon">{{ icon }}</i>
+        <p>{{ navbarpage.title }}</p>
+    </a>
+    
+    {% if subpages.size > 0 %}
+        <div class="subpages navigation-drawer-modal">
+            {% assign id = "" %}
+            {% if page.name == navbarpage.name %}
+                {% assign id = "active-subpage" %}
+            {% endif %}
+            <a href="{{ navbarpage.url }}" id="{{ id }}">
+                {{ navbarpage.title }}
+            </a>
+
+            {% for subpage in subpages %}
+                {% if subpage.title == "page.content" %}
+                    {{ subpage.content }}
+                {% else %}
+                    {% assign id = "" %}
+                    {% if page.name == subpage.name %}
+                        {% assign id = "active-subpage" %}
+                    {% endif %}
+
+                    <a href="{{ subpage.url }}" id="{{ id }}">
+                        {{ subpage.title }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+{% endfor %}
+
+</div>

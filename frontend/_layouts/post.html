@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% include head.html title="Blog" %}
+        <link href="/assets/post.css" rel="stylesheet">
+    </head>
+    <body>
+        <div id="navigation">
+            {% include navigation.html %}
+        </div>
+
+        <div id="titlebar">
+            {% include titlebar.html title="Blog" %}
+        </div>
+        
+        <div id="content">
+            <h1 id="post-title">{{ page.title }}</h1>
+
+            <div id="toc-wrapper" class="card-elevated">
+                <h1>In this post...</h1>
+                {% include toc.html html=content id='toc' %}
+                <div class="actions">
+                    <a class="button-outlined" href="/blog">View All Posts</a>
+                </div>
+            </div>
+
+            <div id="blog-content">
+                {{ content }}
+            </div>
+
+            <div id="reading-menu" class="gallery-flex">
+                {% assign previous = page.previous %}
+                {% if previous %}
+                    <div class="card-filled">
+                        <h1>Previous Post</h1>
+                        <h2>{{ previous.title }}</h2>
+                        <p>{% include desc.html content=previous.content %}</p>
+                        <div class="actions">
+                            <a class="button-text" href="/blog">All Posts</a>
+                            <a class="button-outlined" href="{{ previous.url }}">Read Post</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="card-filled" disabled>
+                        <h1>Previous Post</h1>
+                        <p>No post found. :(</p>
+                        <div class="actions">
+                            <a class="button-text" disabled>All Posts</a>
+                            <a class="button-outlined" disabled>Read Post</a>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% assign next = page.next %}
+                {% if next %}
+                    <div class="card-filled">
+                        <h1>Next Post</h1>
+                        <h2>{{ next.title }}</h2>
+                        <p>{% include desc.html content=next.content %}</p>
+                        <div class="actions">
+                            <a class="button-text" href="/blog">All Posts</a>
+                            <a class="button-outlined" href="{{ next.url }}">Read Post</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="card-filled" disabled>
+                        <h1>Next Post</h1>
+                        <p>No post found. :(</p>
+                        <div class="actions">
+                            <a class="button-text" disabled>All Posts</a>
+                            <a class="button-outlined" disabled>Read Post</a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <a class="fab" href="#titlebar">
+                <i class="icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M4.08 11.92L12 4l7.92 7.92l-1.42 1.41l-5.5-5.5V22h-2V7.83l-5.5 5.5l-1.42-1.41M12 4h10V2H2v2h10Z"/></svg>
+                </i>
+            </a>
+        </div>
+    </body>
+</html>

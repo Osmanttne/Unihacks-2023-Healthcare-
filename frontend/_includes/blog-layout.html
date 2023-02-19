@@ -1,0 +1,26 @@
+<div class="gallery-flex" id="blog-posts" style="--row-size: min-content;">
+    {% for post in include.posts %}
+        <div class="card-elevated">
+            <img class="banner" src="/{{ post.image }}">
+            <h1>{{ post.title }}</h1>
+            <p>{% include desc.html content=post.content %}</p>
+            <div class="actions">
+                <a class="button-outlined" href="{{ post.url }}">Read Post</a>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<div class="divider"></div>
+
+<h1>Blog Feeds</h1>
+<a id="feeds"></a>
+<p>
+    Here are the Atom feeds for my blog: <br>
+    (If you don't know what Atom is, think of it like RSS v3. If you don't know what RSS is, look up 'RSS Reader'. It's super useful!)
+</p>
+<ul>
+    <li><a href="/feed.xml">Everything</a>: Every post in the blog</li>
+    <li><a href="/feed/updates.xml">Updates</a>: Only posts about updates on my projects</li>
+    <li><a href="/feed/tutorials.xml">Tutorials</a>: Only tutorial posts on my blog</li>
+</ul>

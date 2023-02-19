@@ -1,0 +1,26 @@
+{% if page.parent %}
+    {% assign parent = site.pages | where_exp: "site_page", "site_page.name == page.parent" | first %}
+    {% assign title = parent.title %}
+{% else %}
+    {% assign title = page.title %}
+{% endif %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% include head.html title=title %}
+    </head>
+    <body>
+        <div id="navigation">
+            {% include navigation.html %}
+        </div>
+
+        <div id="titlebar">
+            {% include titlebar.html title=title %}
+        </div>
+        
+        <div id="content">
+            {{ content }}
+        </div>
+    </body>
+</html>
