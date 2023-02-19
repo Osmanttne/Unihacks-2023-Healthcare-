@@ -31,3 +31,11 @@ Website for hospital functionality for Unihacks 2023 Hackathon
         - [ ] Rust SCSS parser
         - [ ] Rust Liquid parser, or replace Liquid with Rocket's templating system
     - [ ] Use actual database instead of Serde w/ Postcard
+
+# Screenshots
+![Dashboard](screenshots/dashboard.png)
+![Appointment Setup](screenshots/appointment-setup.png)
+![Doctor Pages](screenshots/doctor-pages.png)
+![Reading Emails](screenshots/email-read.png)
+![Sending an Email](screenshots/email-write.png)
+![Schedule](screenshots/schedule-view.png)
