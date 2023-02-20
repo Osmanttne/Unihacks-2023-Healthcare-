@@ -76,40 +76,46 @@ layout: default
     const req = new Request("http://{{ site.api_url }}/doctor/" + doctor_id + "/appointments");
     const doctor_req = new Request("http://{{ site.api_url }}/doctor/" + doctor_id);
 
-    fetch(doctor_req).then((response) => {
-        return response.json();
-    })
-    .then((doctor) => {
-        document.getElementById("doctor-pic").src = "/assets/doctors/" + doctor["photo"];
-        document.getElementById("doctor-name").innerHTML = "Dr. " + doctor["name"];
-    });
+    fetch("http://{{ site.api_url }}/uuid/from_email/wattsuser@patients.wattshospital.com").then((response) => {
+        return response.json()
+    }).then((patient_id) => {
+        fetch(doctor_req).then((response) => {
+            return response.json();
+        })
+        .then((doctor) => {
+            document.getElementById("doctor-pic").src = "/assets/doctors/" + doctor["photo"];
+            document.getElementById("doctor-name").innerHTML = "Dr. " + doctor["name"];
+        });
 
-    fetch(req).then((response) => {
-        return response.json();
-    })
-    .then((times) => {
-        for (time of times) {
-            let card = document.createElement("div");
-            let title = document.createElement("h1");
-            let text = document.createElement("p");
-            let id = time["id"]
+        fetch(req).then((response) => {
+            return response.json();
+        })
+        .then((times) => {
+            for (time of times) {
+                let card = document.createElement("a");
+                let title = document.createElement("h1");
+                let text = document.createElement("p");
+                let id = time["id"]
 
-            title.innerHTML = time["hour"] + ":" + time["minute"];
-            text.innerHTML = months[time["month"] - 1] + " " + time["day"] + ", " + time["year"];
-            card.classList.add("card-outlined");
-            card.style.width = "100%"
-            console.log(time["id"]);
+                title.innerHTML = time["hour"] + ":" + time["minute"];
+                text.innerHTML = months[time["month"] - 1] + " " + time["day"] + ", " + time["year"];
+                card.classList.add("card-outlined");
+                card.style.width = "100%"
+                card.href = "#";
+                console.log(time["id"]);
 
-            card.onclick = function() {
-                postData('http://{{ site.api_url }}/appointments/reserve', { id: id, patient: "84caa575-3a69-4bdc-ab6d-7ef668da30e7" })
-                .then((data) => {
-                    console.log(data); // JSON data parsed by `data.json()` call
-                });
+                card.onclick = function() {
+                    postData('http://{{ site.api_url }}/appointments/reserve', { id: id, patient: patient_id })
+                    .then((data) => {
+                        console.log(data);
+                    });
+                    card.remove();
+                }
+
+                card.appendChild(text);
+                card.appendChild(title);
+                time_list.appendChild(card);
             }
-
-            card.appendChild(text);
-            card.appendChild(title);
-            time_list.appendChild(card);
-        }
+        })
     })
 </script>
