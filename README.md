@@ -33,6 +33,7 @@ Website for hospital functionality for Unihacks 2023 Hackathon
     - [ ] Use actual database instead of Serde w/ Postcard
 
 # Screenshots
+![image](https://user-images.githubusercontent.com/85412764/219993946-e3003558-302f-4edb-8c35-c29328820acb.png)
 ![Dashboard](screenshots/dashboard.png)
 ![Appointment Setup](screenshots/appointment-setup.png)
 ![Doctor Pages](screenshots/doctor-pages.png)
